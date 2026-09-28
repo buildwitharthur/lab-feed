@@ -6,3 +6,29 @@ generator client {
 datasource db {
     provider = "postgresql"
 }
+
+model User {
+    id        Int      @id @default(autoincrement())
+    name      String
+    username  String   @unique
+    avatarUrl String?
+    posts     Post[]
+    createdAt DateTime @default(now())
+}
+
+model Post {
+    id            Int      @id @default(autoincrement())
+    authorId      Int
+    content       String   @db.Text
+    code          String?  @db.Text
+    tags          String[]
+    commentsCount Int      @default(0)
+    repostsCount  Int      @default(0)
+    likesCount    Int      @default(0)
+    createdAt     DateTime @default(now())
+
+    author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+    @@index([authorId])
+    @@index([createdAt])
+}
