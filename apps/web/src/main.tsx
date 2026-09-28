@@ -8,9 +8,9 @@ import './index.css'
 import { App } from './app'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
+    <StrictMode>
+        <QueryClientProvider client={queryClient}>
+            <App />
+        </QueryClientProvider>
+    </StrictMode>,
 )
