@@ -1,48 +1,31 @@
 import type { RequestHandler } from 'express'
+import { z } from 'zod'
 
 import { prisma } from '../lib/prisma.js'
 
+const getPostsQuerySchema = z.object({
+    limit: z.coerce.number().int().positive().max(50).default(10),
+    cursor: z.coerce.number().int().positive().optional(),
+})
+
 export const getPosts: RequestHandler = async (request, response) => {
-    const rawLimit = request.query.limit
+    const result = getPostsQuerySchema.safeParse(request.query)
 
-    if (rawLimit !== undefined && typeof rawLimit !== 'string') {
+    if (!result.success) {
         return response.status(400).json({
-            message: 'Invalid limit.',
+            message: 'Invalid query parameters.',
         })
     }
 
-    const limit = rawLimit === undefined ? 10 : Number(rawLimit)
-
-    if (!Number.isInteger(limit) || limit <= 0 || limit > 50) {
-        return response.status(400).json({
-            message: 'Invalid limit.',
-        })
-    }
-
-    const rawCursor = request.query.cursor
-
-    if (rawCursor !== undefined && typeof rawCursor !== 'string') {
-        return response.status(400).json({
-            message: 'Invalid cursor.',
-        })
-    }
-
-    const cursor = rawCursor === undefined ? undefined : Number(rawCursor)
-
-    if (cursor !== undefined && (!Number.isInteger(cursor) || cursor <= 0)) {
-        return response.status(400).json({
-            message: 'Invalid cursor.',
-        })
-    }
+    const { limit, cursor } = result.data
 
     const posts = await prisma.post.findMany({
-        where: cursor
+        cursor: cursor
             ? {
-                  id: {
-                      lt: cursor,
-                  },
+                  id: cursor,
               }
             : undefined,
+        skip: cursor ? 1 : 0,
         take: limit + 1,
         orderBy: {
             id: 'desc',
@@ -68,11 +51,15 @@ export const getPosts: RequestHandler = async (request, response) => {
     })
 
     const hasMore = posts.length > limit
-    const visiblePosts = hasMore ? posts.slice(0, limit) : posts
-    const lastPost = visiblePosts.at(-1)
+
+    if (hasMore) {
+        posts.pop()
+    }
+
+    const lastPost = posts.at(-1)
 
     return response.status(200).json({
-        posts: visiblePosts,
+        posts,
         nextCursor: hasMore && lastPost ? lastPost.id : null,
         hasMore,
     })
