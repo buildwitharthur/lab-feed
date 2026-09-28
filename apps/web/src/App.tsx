@@ -1,3 +1,7 @@
+import { Suspense } from 'react'
+
+import { Feed } from './components/feed'
+import { FeedSkeleton } from './components/feed-skeleton'
 import { Header } from './components/header'
 
 export function App() {
@@ -14,6 +18,10 @@ export function App() {
                         Experimentos, código e coisas que estamos construindo.
                     </p>
                 </section>
+
+                <Suspense fallback={<FeedSkeleton />}>
+                    <Feed />
+                </Suspense>
             </main>
         </div>
     )
