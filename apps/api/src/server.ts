@@ -3,6 +3,7 @@ import express from 'express'
 
 import { errorHandler } from './middleware/error-handler.js'
 import { apiRateLimit } from './middleware/rate-limit.js'
+import { getPosts } from './routes/get-posts.js'
 
 export const app = express()
 
@@ -25,6 +26,8 @@ app.get('/health', (_request, response) => {
         status: 'ok',
     })
 })
+
+app.get('/posts', getPosts)
 
 app.use(errorHandler)
 
